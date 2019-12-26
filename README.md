@@ -1,4 +1,4 @@
-# Klaviyo Metric Aggregation
+# Klaviyo Metric Aggregations
 Helper classes & scripts to walk the Klaviyo metric timeline API programmatically and construct aggregates from timeline data. 
 
 See [bin/message_aggregates_from_timeline.py](https://github.com/ben-liang/klaviyo_metric_aggregations/blob/master/bin/message_aggregates_from_timeline.py) for a sample script to perform these aggregations.
