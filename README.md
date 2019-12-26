@@ -13,5 +13,5 @@ $ source .env/bin/activate
 
 To run the sample script, run:
 ```
-$ ./bin/message_aggregates_from_timeline.py $API_KEY --metric_name="Received Email"
+$ python ./bin/message_aggregates_from_timeline.py $API_KEY --metric_name="Received Email"
 ```
