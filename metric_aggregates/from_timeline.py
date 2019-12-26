@@ -1,5 +1,4 @@
 import time
-import pandas as pd
 import klaviyo
 from . import utils
 from tqdm import tqdm
@@ -17,13 +16,13 @@ class AggregatesFromTimeline(object):
         """
         response = self.client.metric_timeline(metric_id=metric_id, since=since, count=count, sort='desc')
         retries = 0
-        while (response.status_code != 200) & (retries <= max_retries):
-            print("ERROR: {}".format(response.status_code))
+        while ("count" not in response) & (retries <= max_retries):
+            print("ERROR: {}".format(response))
             print("Sleeping for 5 seconds then retrying...")
             time.sleep(sleep)
             response = self.client.metric_timeline(metric_id=metric_id, since=since, count=count, sort='desc')
             retries += 1
-        return response.json()
+        return response
 
     def _get_metric_data_batch(self, metric_name, batch_size, sleep=None, since=None):
         """
@@ -62,14 +61,11 @@ class AggregatesFromTimeline(object):
         rate-limiting or any server-side performance issues.
 
         Args:
-            metric_name:
-            batch_size:
+            metric_name: Name of metric
+            batch_size: number of requests to execute per "batch" before sleeping for n secs
             sleep_between_batches: time in seconds to sleep in between batches of calls.
             sleep_in_batches: time to sleep in between individual calls in each batch
             since: UUID or Unix tstamp of next batch
-
-        Returns:
-
         """
 
         metric_data, since = self._get_metric_data_batch(metric_name,
@@ -84,20 +80,3 @@ class AggregatesFromTimeline(object):
             if sleep_between_batches is not None:
                 time.sleep(sleep_between_batches)
         return metric_data
-
-    @staticmethod
-    def aggregate_timeline_data(metric_data):
-        """
-        Perform aggregations on raw metric data w/ Pandas
-
-        Returns:
-            pd.Dataframe: Dataframe containing aggregated results
-
-        """
-        df = pd.DataFrame.from_dict(metric_data)
-        if len(metric_data):
-            df['send_date'] = pd.to_datetime(df['send_date'], errors='coerce')
-            return df.groupby(['message_id', 'campaign_name', 'event_name', df['send_date'].dt.date])\
-                    .agg({'customer': 'count'}).rename(columns={'customer': 'count'})
-        else:
-            return df
