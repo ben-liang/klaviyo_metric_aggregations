@@ -1,5 +1,6 @@
 import time
 import klaviyo
+from requests.exceptions import RequestException
 from . import utils
 from tqdm import tqdm
 
@@ -14,14 +15,25 @@ class AggregatesFromTimeline(object):
         """
         Handler around request to metric API endpoint to deal w/ retrying & error notification
         """
-        response = self.client.metric_timeline(metric_id=metric_id, since=since, count=count, sort='desc')
         retries = 0
-        while ("count" not in response) & (retries <= max_retries):
-            print("ERROR: {}".format(response))
-            print("Sleeping for 5 seconds then retrying...")
-            time.sleep(sleep)
-            response = self.client.metric_timeline(metric_id=metric_id, since=since, count=count, sort='desc')
-            retries += 1
+        response = None
+        while retries <= max_retries:
+            try:
+                response = self.client.metric_timeline(metric_id=metric_id, since=since, count=count, sort='desc')
+                # using "count" in response as (somewhat shaky) criteria to determine whether request was
+                # successful or not
+                if "count" in response:
+                    break
+                else:
+                    raise RequestException('Metric timeline API request unsuccessful: {}'.format(response))
+            except RequestException as e:
+                print("ERROR: {}".format(e))
+                print("Sleeping for 5 seconds then retrying...")
+                time.sleep(sleep)
+                retries += 1
+        if response is None:
+            raise RequestException('Metric timeline API request retried {} times, '
+                                   'could not be completed successfully.'.format(max_retries))
         return response
 
     def _get_metric_data_batch(self, metric_name, batch_size, sleep=None, since=None):
