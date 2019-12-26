@@ -1,0 +1,2 @@
+- pip install requests
+- add api_key to metrics.py
