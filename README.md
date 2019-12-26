@@ -8,7 +8,7 @@ To get started, first set up the virtual environment by running (on MacOSx/Linux
 ```
 $ python3 -m venv env
 $ pip install -r requirements.txt
-$ source .env/bin/activates
+$ source .env/bin/activate
 ```
 
 To run the sample script, run:
