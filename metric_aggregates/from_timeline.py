@@ -11,7 +11,7 @@ class AggregatesFromTimeline(object):
         self.api_key = api_key
         self.client = klaviyo.Klaviyo(private_token=api_key)
 
-    def metric_timeline_request_handler(self, metric_id, since=None, count=None, max_retries=5, sleep=5):
+    def metric_timeline_request_handler(self, metric_id, since=None, count=None, sort=None, max_retries=5, sleep=5):
         """
         Handler around request to metric API endpoint to deal w/ retrying & error notification
         """
@@ -19,7 +19,7 @@ class AggregatesFromTimeline(object):
         response = None
         while retries <= max_retries:
             try:
-                response = self.client.metric_timeline(metric_id=metric_id, since=since, count=count, sort='desc')
+                response = self.client.metric_timeline(metric_id=metric_id, since=since, count=count, sort=sort)
                 # using "count" in response as (somewhat shaky) criteria to determine whether request was
                 # successful or not
                 if "count" in response:
@@ -36,7 +36,7 @@ class AggregatesFromTimeline(object):
                                    'could not be completed successfully.'.format(max_retries))
         return response
 
-    def _get_metric_data_batch(self, metric_name, batch_size, sleep=None, since=None):
+    def _get_metric_data_batch(self, metric_name, batch_size, sleep=None, since=None, sort=None):
         """
         Gets a "batch" of metric timeline data, i.e. executed a fixed number of sequential calls to the timelines API
         and returns results.
@@ -45,7 +45,7 @@ class AggregatesFromTimeline(object):
         metric_data = []
         print("Beginning metric timeline API request batch of {}, metric ID {}".format(batch_size, metric_id))
         for i in tqdm(range(batch_size)):
-            response = self.metric_timeline_request_handler(metric_id, since=since)
+            response = self.metric_timeline_request_handler(metric_id, since=since, sort=sort)
             if response is None:
                 break
             for e in response["data"]:
@@ -67,7 +67,7 @@ class AggregatesFromTimeline(object):
         return metric_data, since
 
     def get_metric_data(self, metric_name, batch_size=10000, sleep_between_batches=3,
-                        sleep_in_batches=None, since=None):
+                        sleep_in_batches=None, since=None, sort='desc'):
         """
         Call metric timeline API in batches of n in order to give it a break after n calls in order to avoid
         rate-limiting or any server-side performance issues.
@@ -78,16 +78,18 @@ class AggregatesFromTimeline(object):
             sleep_between_batches: time in seconds to sleep in between batches of calls.
             sleep_in_batches: time to sleep in between individual calls in each batch
             since: UUID or Unix tstamp of next batch
+            sort: order in which timeline is sorted, default is "desc"
         """
 
         metric_data, since = self._get_metric_data_batch(metric_name,
                                                          batch_size=batch_size,
                                                          sleep=sleep_in_batches,
-                                                         since=since)
+                                                         since=since,
+                                                         sort=sort)
 
         while since:
             md, since = self._get_metric_data_batch(metric_name, batch_size=batch_size,
-                                                    sleep=sleep_in_batches, since=since)
+                                                    sleep=sleep_in_batches, since=since, sort=sort)
             metric_data.extend(md)
             if sleep_between_batches is not None:
                 time.sleep(sleep_between_batches)

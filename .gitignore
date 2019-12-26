@@ -1,6 +1,7 @@
 # Packages
 *.egg
 *.egg-info
+*.py[co]
 dist
 build
 eggs
