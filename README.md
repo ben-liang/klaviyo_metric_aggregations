@@ -11,7 +11,7 @@ $ pip install -r requirements.txt
 $ source .env/bin/activate
 ```
 
-To run the sample script, run:
+To run the sample to loop over all message IDs (from Flows & Campaigns) and call the metric export endpoint, run:
 ```
-$ python ./bin/message_aggregates_from_timeline.py $API_KEY --metric_name="Received Email"
+$ python ./bin/message_aggregates_from_export.py $API_KEY --metric_name="Received Email" --start_date="2019-06-03" --end_date="2019-06-10"
 ```
