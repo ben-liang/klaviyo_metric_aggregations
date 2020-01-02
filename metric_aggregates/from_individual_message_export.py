@@ -128,6 +128,7 @@ class AggregatesFromIndividualMessageExport(object):
         for campaigns & flows, then looping over message_id list and passing each message ID
         single metric export API requests.
         """
+
         message_ids = self.get_campaigns()
         print("{} Campaign message IDs found for account.".format(len(message_ids)))
         flow_ids = self.get_flow_message_ids()

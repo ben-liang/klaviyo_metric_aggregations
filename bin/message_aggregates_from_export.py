@@ -32,5 +32,5 @@ if __name__ == "__main__":
     # Store all data in CSV
     filename = "../data/{api_key}_{metric_name}_aggregate_data.json".format(api_key=args.api_key,
                                                                             metric_name=args.metric_name)
-    with (filename, "w") as file:
+    with open(filename, "w") as file:
         json.dump(metric_data, file, indent=4, sort_keys=True)
