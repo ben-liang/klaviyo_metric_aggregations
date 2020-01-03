@@ -99,16 +99,17 @@ class AggregatesFromIndividualMessageExport(object):
         Gets metric data from metric export endpoint for metric_name, campaigns list. Performs a \
         single request per campaign in campaigns list.
         """
-        metric_id = utils.get_metric_id(metric_name, self.client)
+        metric_ids = utils.get_metric_id(metric_name, self.client)
         metric_data = []
-        for message_id in tqdm(message_ids):
-            message = '[["$message","=","{}"]]'.format(message_id)
-            response = self.client.metric_export(metric_id,
-                                                 start_date=start_date,
-                                                 end_date=end_date,
-                                                 where=message,
-                                                 unit="day")
-            metric_data.append(response)
+        for metric_id in metric_ids:
+            for message_id in tqdm(message_ids):
+                message = '[["$message","=","{}"]]'.format(message_id)
+                response = self.client.metric_export(metric_id,
+                                                    start_date=start_date,
+                                                    end_date=end_date,
+                                                    where=message,
+                                                    unit="day")
+                metric_data.extend(response)
         return metric_data
 
     def get_metric_export_for_all_messages(self, metric_id, start_date, end_date):
