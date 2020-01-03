@@ -94,7 +94,7 @@ class AggregatesFromIndividualMessageExport(object):
 
         return all_message_ids
 
-    def get_metric_data_from_export_for_message_ids(self, metric_name, message_ids, start_date, end_date):
+    def get_metric_data_from_export_for_message_ids(self, metric_name, message_ids, start_date, end_date, unit="day"):
         """
         Gets metric data from metric export endpoint for metric_name, campaigns list. Performs a \
         single request per campaign in campaigns list.
@@ -108,7 +108,7 @@ class AggregatesFromIndividualMessageExport(object):
                                                     start_date=start_date,
                                                     end_date=end_date,
                                                     where=message,
-                                                    unit="day")
+                                                    unit=unit)
                 metric_data.extend(response)
         return metric_data
 
