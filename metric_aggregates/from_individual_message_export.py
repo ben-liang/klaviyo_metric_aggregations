@@ -94,21 +94,23 @@ class AggregatesFromIndividualMessageExport(object):
 
         return all_message_ids
 
-    def get_metric_data_from_export_for_message_ids(self, metric_name, message_ids, start_date, end_date):
+    def get_metric_data_from_export_for_message_ids(self, metric_name, message_ids, start_date, end_date, unit, measurement):
         """
         Gets metric data from metric export endpoint for metric_name, campaigns list. Performs a \
         single request per campaign in campaigns list.
         """
-        metric_id = utils.get_metric_id(metric_name, self.client)
+        metric_ids = utils.get_metric_id(metric_name, self.client)
         metric_data = []
-        for message_id in tqdm(message_ids):
-            message = '[["$message","=","{}"]]'.format(message_id)
-            response = self.client.metric_export(metric_id,
-                                                 start_date=start_date,
-                                                 end_date=end_date,
-                                                 where=message,
-                                                 unit="day")
-            metric_data.append(response)
+        for metric_id in metric_ids:
+            for message_id in tqdm(message_ids):
+                message = '[["$message","=","{}"]]'.format(message_id)
+                response = self.client.metric_export(metric_id,
+                                                    start_date=start_date,
+                                                    end_date=end_date,
+                                                    where=message,
+                                                    unit=unit,
+                                                    measurement=measurement)
+                metric_data.extend(response)
         return metric_data
 
     def get_metric_export_for_all_messages(self, metric_id, start_date, end_date):
@@ -122,7 +124,7 @@ class AggregatesFromIndividualMessageExport(object):
                                          by="$message",
                                          count=10000)
 
-    def main(self, metric_name, start_date, end_date):
+    def main(self, metric_name, start_date, end_date, unit="day", measurement="count"):
         """
         Gets metric export data for specific metric name by first getting all message IDs
         for campaigns & flows, then looping over message_id list and passing each message ID
@@ -134,9 +136,11 @@ class AggregatesFromIndividualMessageExport(object):
         flow_ids = self.get_flow_message_ids()
         print("{} Flow message IDs found for account.".format(len(flow_ids)))
         message_ids.extend(flow_ids)
-        print("Getting metric export data for {metric_name} from {start_date} to {end_date} "
-              "for {message_count} messages (this may take a little while)...".format(metric_name=metric_name,
+        print("Getting metric export data for {measurement} of {metric_name} from {start_date} to {end_date} by {unit} "
+              "for {message_count} messages (this may take a little while)...".format(measurement=measurement,
+                                                                                      metric_name=metric_name,
                                                                                       message_count=len(message_ids),
                                                                                       start_date=start_date,
-                                                                                      end_date=end_date))
-        return self.get_metric_data_from_export_for_message_ids(metric_name, message_ids, start_date, end_date)
+                                                                                      end_date=end_date,
+                                                                                      unit=unit))
+        return self.get_metric_data_from_export_for_message_ids(metric_name, message_ids, start_date, end_date, unit, measurement)

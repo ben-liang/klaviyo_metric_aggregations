@@ -8,3 +8,5 @@ eggs
 env
 .idea
 data
+venv
+.vscode
